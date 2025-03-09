@@ -19,14 +19,14 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.get("/health", (req: Request, res: Response) => {
+app.get("api/v1/health", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: "Server is up and running",
   });
 });
 
-app.get("/github", async (req: Request, res: Response) => {
+app.get("api/v1/github", async (req: Request, res: Response) => {
   try {
     const response = await fetch(`${userByNameUrl}/${username}`);
     const data = await response.json();
@@ -43,7 +43,7 @@ app.get("/github", async (req: Request, res: Response) => {
   }
 });
 
-app.get("/github/:repo_name", async (req: Request, res: Response) => {
+app.get("api/v1/github/:repo_name", async (req: Request, res: Response) => {
   const { repo_name } = req.params;
   const url = `${repoUrl}/${username}/${repo_name}`;
   try {
@@ -66,49 +66,55 @@ app.get("/github/:repo_name", async (req: Request, res: Response) => {
     });
   }
 });
-app.post("/github/:repo_name/issue", async (req: Request, res: Response) => {
-  const { repo_name } = req.params;
-  const { title, body } = req.body;
-  if (!title || !body) {
-    res.status(400).json({
-      success: false,
-      message: "Title and Body are required",
-    });
-    return;
+app.post(
+  "api/v1/github/:repo_name/issue",
+  async (req: Request, res: Response) => {
+    const { repo_name } = req.params;
+    const { title, body } = req.body;
+    if (!title || !body) {
+      res.status(400).json({
+        success: false,
+        message: "Title and Body are required",
+      });
+      return;
+    }
+    if (!githubToken) {
+      res.status(400).json({
+        success: false,
+        message: "GitHub token is required",
+      });
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${repoUrl}/${username}/${repo_name}/issues`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `token ${githubToken}`,
+          },
+          body: JSON.stringify({
+            owner: username,
+            repo: repo_name,
+            title,
+            body,
+          }),
+        }
+      );
+      const data = await response.json();
+      res.status(201).json({
+        success: true,
+        data: data?.url,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Unable to create issue",
+      });
+    }
   }
-  if (!githubToken) {
-    res.status(400).json({
-      success: false,
-      message: "GitHub token is required",
-    });
-    return;
-  }
-  try {
-    const response = await fetch(`${repoUrl}/${username}/${repo_name}/issues`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `token ${githubToken}`,
-      },
-      body: JSON.stringify({
-        owner: username,
-        repo: repo_name,
-        title,
-        body,
-      }),
-    });
-    const data = await response.json();
-    res.status(201).json({
-      success: true,
-      data: data?.url,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Unable to create issue",
-    });
-  }
-});
+);
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
