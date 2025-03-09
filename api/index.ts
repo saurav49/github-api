@@ -9,16 +9,17 @@ import bodyParser from "body-parser";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
 const username = process?.env.GITHUB_USERNAME || "";
 const githubToken = process?.env.GITHUB_TOKEN || "";
 
+// Middlewares
 app.use(helmet());
 app.use(cors());
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Health check route
 app.get("/api/v1/health", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -26,6 +27,7 @@ app.get("/api/v1/health", (req: Request, res: Response) => {
   });
 });
 
+// GitHub user data route
 app.get("/api/v1/github", async (req: Request, res: Response) => {
   try {
     const response = await fetch(`${userByNameUrl}/${username}`);
@@ -38,11 +40,12 @@ app.get("/api/v1/github", async (req: Request, res: Response) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "unable to fetch data",
+      message: "Unable to fetch data",
     });
   }
 });
 
+// GitHub repository data route
 app.get("/api/v1/github/:repo_name", async (req: Request, res: Response) => {
   const { repo_name } = req.params;
   const url = `${repoUrl}/${username}/${repo_name}`;
@@ -66,6 +69,8 @@ app.get("/api/v1/github/:repo_name", async (req: Request, res: Response) => {
     });
   }
 });
+
+// Create an issue route
 app.post(
   "/api/v1/github/:repo_name/issue",
   async (req: Request, res: Response) => {
@@ -116,8 +121,4 @@ app.post(
   }
 );
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
-
-module.exports = app;
+export default app;
