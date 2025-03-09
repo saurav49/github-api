@@ -1,0 +1,39 @@
+# Node.js dependencies
+/node_modules/
+
+# Build output
+/dist/
+/build/
+
+/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv environment variables file
+.env
+
+# VSCode settings
+.vscode/
+
+# TypeScript v1 declaration files
+*.tsbuildinfo
+
+# macOS Finder directory attributes
+.DS_Store
+
+# Windows Installer files
+Thumbs.db
+
+# JetBrains IDE files (if using IntelliJ/WebStorm/etc.)
+.idea/
+
+# Tye (a tool for .NET development)
+.tye/
+
+# pnpm-lock file, as sometimes you may not want to commit it, especially if it's a library
+pnpm-lock.yaml
+
+# Optional: Ignore build cache files
+/.cache/
+
